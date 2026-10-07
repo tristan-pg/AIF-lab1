@@ -2,7 +2,15 @@ import sys
 
 from map_reader import read_map
 from astar import astar
+from bfs import bfs
+from dfs import dfs
 from heuristics import *
+
+# Blind search algorithms (they do not use a heuristic):
+BLIND_ALGORITHMS = {
+    "bfs": bfs,
+    "dfs": dfs
+}
 
 def main():
 
@@ -44,9 +52,18 @@ def main():
             heuristic
         )
 
+    elif algorithm in BLIND_ALGORITHMS:
+
+        # We run the algorithm:
+        path, explored_count, frontier_count = BLIND_ALGORITHMS[algorithm](
+            terrain,
+            init_state,
+            goal_state
+        )
+
     else:
         print(f"Unknown algorithm: {algorithm}")
-        print("Available algorithms: astar")
+        print("Available algorithms: astar,", ", ".join(BLIND_ALGORITHMS))
         return
     
     # In case no solution has been found:
@@ -61,10 +78,14 @@ def main():
     print()
 
     for depth, node in enumerate(path):
-        print(
-            f"({depth}, {node.g}, {node.action}, "
-            f"{node.h}, {node.state})"
-        )
+        # Blind search nodes are shown as "(d, g(n), op, S)" and A* nodes as "(d, g(n), op, h(n), S)":
+        if algorithm in BLIND_ALGORITHMS:
+            print(f"({depth}, {node.g}, {node.action}, {node.state})")
+        else:
+            print(
+                f"({depth}, {node.g}, {node.action}, "
+                f"{node.h}, {node.state})"
+            )
 
     print()
     print(f"#E: {explored_count}")
