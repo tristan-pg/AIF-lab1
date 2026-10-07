@@ -2,31 +2,12 @@ import heapq
 
 from node import Node
 from successors import get_successors
+from common import is_goal, reconstruct_path
 from heuristics import *
 
-# Auxiliary function to check if the current state is the goal:
-def is_goal(state, goal):
-    # In case the goal's orientation is irrelevant:
-    if goal.o.value == 8:
-        return state.x == goal.x and state.y == goal.y
-
-    # In any other case, the orientation is checked as well:
-    return state == goal
-
-
-# Auxiliary function to rebuild the path:
-def reconstruct_path(node):
-    path = []
-
-    # All the previous nodes are added:
-    while node is not None:
-        path.append(node)
-        node = node.parent
-
-    path.reverse()
-    return path
-
-
+# A* search (graph search), ordered by "f(n) = g(n) + h(n)".
+# It returns "(found, path, #E, #F)". If no solution is found, "path" goes
+# from the initial node to the last examined node:
 def astar(terrain, init_state, goal_state, heuristic):
     init_node = Node(
         state = init_state,
@@ -50,6 +31,9 @@ def astar(terrain, init_state, goal_state, heuristic):
     visited = set()
     visited_count = 0
 
+    # Last examined node (obsolete entries do not count):
+    last_examined = init_node
+
     while frontier:
         _, _, current = heapq.heappop(frontier)
 
@@ -59,10 +43,11 @@ def astar(terrain, init_state, goal_state, heuristic):
 
         # We remove the current node from the frontier:
         del frontier_nodes[current.state]
+        last_examined = current
 
         # Check if we reached the goal:
         if is_goal(current.state, goal_state):
-            return(reconstruct_path(current), visited_count, len(frontier_nodes))
+            return True, reconstruct_path(current), visited_count, len(frontier_nodes)
 
         # Otherwise, we expand the current node:
         visited.add(current.state)
@@ -97,4 +82,4 @@ def astar(terrain, init_state, goal_state, heuristic):
                 frontier_nodes[successor_state] = successor_node
 
     # In case no solution has been found:
-    return None, visited_count, len(frontier_nodes)
+    return False, reconstruct_path(last_examined), visited_count, len(frontier_nodes)

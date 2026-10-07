@@ -23,7 +23,11 @@ def main():
     algorithm = sys.argv[2].lower()
 
     # We first read the map:
-    terrain, init_state, goal_state = read_map(map_file)
+    try:
+        terrain, init_state, goal_state = read_map(map_file)
+    except (OSError, ValueError) as error:
+        print(f"Error reading the map '{map_file}': {error}")
+        return
 
     # We select the algorithm and run it:
     if algorithm == "astar":
@@ -45,7 +49,7 @@ def main():
         heuristic = HEURISTICS[heuristic_name]
 
         # We run the algorithm:
-        path, explored_count, frontier_count = astar(
+        found, path, explored_count, frontier_count = astar(
             terrain,
             init_state,
             goal_state,
@@ -55,7 +59,7 @@ def main():
     elif algorithm in BLIND_ALGORITHMS:
 
         # We run the algorithm:
-        path, explored_count, frontier_count = BLIND_ALGORITHMS[algorithm](
+        found, path, explored_count, frontier_count = BLIND_ALGORITHMS[algorithm](
             terrain,
             init_state,
             goal_state
@@ -66,30 +70,33 @@ def main():
         print("Available algorithms: astar,", ", ".join(BLIND_ALGORITHMS))
         return
     
-    # In case no solution has been found:
-    if path is None:
-        print("No solution found.")
-        print(f"#E: {explored_count}")
-        print(f"#F: {frontier_count}")
-        return
+    # In case no solution has been found, the path to the last examined node is shown:
+    if not found:
+        print("No solution found. Path from the initial node to the last examined node:")
 
-    # In another case:
-    print("Solution found:")
-    print()
+    last_label = "(final node)" if found else "(last examined node)"
 
     for depth, node in enumerate(path):
+        # Each node is preceded by the operator that generated it:
+        if depth > 0:
+            print(f"Operator {depth}: {node.action}")
+
+        if depth == 0:
+            label = " (starting node)"
+        elif depth == len(path) - 1:
+            label = f" {last_label}"
+        else:
+            label = ""
+
         # Blind search nodes are shown as "(d, g(n), op, S)" and A* nodes as "(d, g(n), op, h(n), S)":
         if algorithm in BLIND_ALGORITHMS:
-            print(f"({depth}, {node.g}, {node.action}, {node.state})")
+            print(f"Node {depth}{label}: ({depth}, {node.g}, {node.action}, {node.state})")
         else:
-            print(
-                f"({depth}, {node.g}, {node.action}, "
-                f"{node.h}, {node.state})"
-            )
+            print(f"Node {depth}{label}: ({depth}, {node.g}, {node.action}, {node.h}, {node.state})")
 
     print()
-    print(f"#E: {explored_count}")
-    print(f"#F: {frontier_count}")
+    print(f"Total number of items in explored list: {explored_count}")
+    print(f"Total number of items in frontier: {frontier_count}")
 
 
 if __name__ == "__main__":

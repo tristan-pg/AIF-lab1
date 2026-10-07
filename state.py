@@ -19,3 +19,7 @@ class State:
     x: int  # X Axis
     y: int  # Y Axis
     o: Ori  # Orientation
+
+    # The state is shown as "(x, y, ORIENTATION)":
+    def __str__(self):
+        return f"({self.x}, {self.y}, {self.o.name})"

@@ -37,10 +37,10 @@ def main():
 
         for name, method in METHODS.items():
             results = [method(*problem) for problem in problems]
-            d = sum(len(path) - 1 for path, _, _ in results) / RUNS
-            g = sum(path[-1].g for path, _, _ in results) / RUNS
-            e = sum(explored for _, explored, _ in results) / RUNS
-            f = sum(frontier for _, _, frontier in results) / RUNS
+            d = sum(len(path) - 1 for _, path, _, _ in results) / RUNS
+            g = sum(path[-1].g for _, path, _, _ in results) / RUNS
+            e = sum(explored for _, _, explored, _ in results) / RUNS
+            f = sum(frontier for _, _, _, frontier in results) / RUNS
             print(f"| {name:<16} | {d:6.1f} | {g:6.1f} | {e:6.1f} | {f:6.1f} |")
 
 

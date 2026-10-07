@@ -2,17 +2,19 @@ from collections import deque
 
 from node import Node
 from successors import get_successors
-from astar import is_goal, reconstruct_path
+from common import is_goal, reconstruct_path
 
 # Breadth-first search (graph search). The frontier is a FIFO queue and the goal
 # test is done when a node is generated. It finds the solution with the fewest
-# actions, which is not necessarily the cheapest one (costs are not uniform):
+# actions, which is not necessarily the cheapest one (costs are not uniform).
+# It returns "(found, path, #E, #F)". If no solution is found, "path" goes
+# from the initial node to the last examined node:
 def bfs(terrain, init_state, goal_state):
     init_node = Node(state = init_state)
 
     # In case the initial state is already the goal:
     if is_goal(init_state, goal_state):
-        return reconstruct_path(init_node), 0, 0
+        return True, reconstruct_path(init_node), 0, 0
 
     # FIFO queue with the nodes to expand, and the set of their states:
     frontier = deque([init_node])
@@ -20,6 +22,9 @@ def bfs(terrain, init_state, goal_state):
 
     # Expanded states:
     visited = set()
+
+    # Last examined node:
+    current = init_node
 
     while frontier:
         current = frontier.popleft()
@@ -42,10 +47,10 @@ def bfs(terrain, init_state, goal_state):
 
             # Check if we reached the goal:
             if is_goal(successor_state, goal_state):
-                return reconstruct_path(successor_node), len(visited), len(frontier)
+                return True, reconstruct_path(successor_node), len(visited), len(frontier)
 
             frontier.append(successor_node)
             frontier_states.add(successor_state)
 
     # In case no solution has been found:
-    return None, len(visited), len(frontier)
+    return False, reconstruct_path(current), len(visited), len(frontier)
