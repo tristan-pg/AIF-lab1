@@ -1,15 +1,13 @@
 from state import State
 
-# Manhattan Distance (TEST):
-def manhattan(state: State, goal:State) -> int:
-    return abs(state.x - goal.x) + abs(state.y - goal.y)
-
-# Chebyshev Distance (TEST):
-def chebyshev(state: State, goal: State) -> int:
-    return max(abs(state.x - goal.x), abs(state.y - goal.y))
+# We obtain the following heuristic by relaxing the problem, by ignoring
+# the cost of turning around. This also corresponds to the Chebyshev distance:
+def no_turning_cost(state: State, goal: State):
+    return max(
+        abs(state.x - goal.x),
+        abs(state.y - goal.y))
 
 # All available heuristics:
 HEURISTICS = {
-    "manhattan": manhattan,
-    "chebyshev": chebyshev
+    "no_turning_cost": no_turning_cost
 }
