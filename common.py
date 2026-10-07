@@ -21,3 +21,14 @@ def reconstruct_path(node):
 
     path.reverse()
     return path
+
+
+# Auxiliary function to show a node as "(d, g(n), op, S)", or as
+# "(d, g(n), op, h(n), S)" for informed search:
+def format_node(node, show_h = False):
+    depth = len(reconstruct_path(node)) - 1
+
+    if show_h:
+        return f"({depth}, {node.g}, {node.action}, {node.h}, {node.state})"
+
+    return f"({depth}, {node.g}, {node.action}, {node.state})"

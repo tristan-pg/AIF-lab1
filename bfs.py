@@ -2,14 +2,15 @@ from collections import deque
 
 from node import Node
 from successors import get_successors
-from common import is_goal, reconstruct_path
+from common import is_goal, reconstruct_path, format_node
 
 # Breadth-first search (graph search). The frontier is a FIFO queue and the goal
 # test is done when a node is generated. It finds the solution with the fewest
 # actions, which is not necessarily the cheapest one (costs are not uniform).
 # It returns "(found, path, #E, #F)". If no solution is found, "path" goes
-# from the initial node to the last examined node:
-def bfs(terrain, init_state, goal_state):
+# from the initial node to the last examined node.
+# If "log" is given (e.g. "print"), the search process is traced step by step.
+def bfs(terrain, init_state, goal_state, log = None):
     init_node = Node(state = init_state)
 
     # In case the initial state is already the goal:
@@ -33,9 +34,14 @@ def bfs(terrain, init_state, goal_state):
         # We expand the current node:
         visited.add(current.state)
 
+        if log:
+            log(f"[{len(visited)}] Expanding {format_node(current)} | frontier: {len(frontier)}")
+
         for successor_state, action, cost in get_successors(current.state, terrain):
             # We ignore states already expanded or waiting in the frontier:
             if successor_state in visited or successor_state in frontier_states:
+                if log:
+                    log(f"      - {action} -> {successor_state} repeated, ignored")
                 continue
 
             successor_node = Node(
@@ -45,8 +51,13 @@ def bfs(terrain, init_state, goal_state):
                 g = current.g + cost
             )
 
+            if log:
+                log(f"      + {format_node(successor_node)}")
+
             # Check if we reached the goal:
             if is_goal(successor_state, goal_state):
+                if log:
+                    log(f"      Goal reached: {format_node(successor_node)}")
                 return True, reconstruct_path(successor_node), len(visited), len(frontier)
 
             frontier.append(successor_node)

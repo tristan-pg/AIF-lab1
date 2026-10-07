@@ -2,13 +2,14 @@ import heapq
 
 from node import Node
 from successors import get_successors
-from common import is_goal, reconstruct_path
+from common import is_goal, reconstruct_path, format_node
 from heuristics import *
 
 # A* search (graph search), ordered by "f(n) = g(n) + h(n)".
 # It returns "(found, path, #E, #F)". If no solution is found, "path" goes
-# from the initial node to the last examined node:
-def astar(terrain, init_state, goal_state, heuristic):
+# from the initial node to the last examined node.
+# If "log" is given (e.g. "print"), the search process is traced step by step.
+def astar(terrain, init_state, goal_state, heuristic, log = None):
     init_node = Node(
         state = init_state,
         g = 0,
@@ -47,22 +48,31 @@ def astar(terrain, init_state, goal_state, heuristic):
 
         # Check if we reached the goal:
         if is_goal(current.state, goal_state):
+            if log:
+                log(f"Goal reached: {format_node(current, True)}")
             return True, reconstruct_path(current), visited_count, len(frontier_nodes)
 
         # Otherwise, we expand the current node:
         visited.add(current.state)
         visited_count += 1
 
+        if log:
+            log(f"[{visited_count}] Expanding {format_node(current, True)} "
+                f"| f = {current.f} | frontier: {len(frontier_nodes)}")
+
         # Generate the successors:
         for successor_state, action, cost in get_successors(current.state, terrain):
             # We ignore previously expanded states:
             if successor_state in visited:
+                if log:
+                    log(f"      - {action} -> {successor_state} already explored, ignored")
                 continue
 
             new_g = current.g + cost
 
             # If this is a better path to the successor:
             if(successor_state not in best_g_score or new_g < best_g_score[successor_state]):
+                improved = successor_state in best_g_score
                 successor_h = heuristic(successor_state, goal_state)
 
                 # We obtain the successor node:
@@ -80,6 +90,14 @@ def astar(terrain, init_state, goal_state, heuristic):
 
                 heapq.heappush(frontier, (successor_node.f, ins_order, successor_node))
                 frontier_nodes[successor_state] = successor_node
+
+                if log:
+                    note = " (better path to a state in the frontier)" if improved else ""
+                    log(f"      + {format_node(successor_node, True)}{note}")
+
+            elif log:
+                log(f"      - {action} -> {successor_state} with g = {new_g}, "
+                    f"not better than {best_g_score[successor_state]}, ignored")
 
     # In case no solution has been found:
     return False, reconstruct_path(last_examined), visited_count, len(frontier_nodes)

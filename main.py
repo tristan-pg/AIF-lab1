@@ -5,6 +5,7 @@ from astar import astar
 from bfs import bfs
 from dfs import dfs
 from heuristics import *
+from common import format_node
 
 # Blind search algorithms (they do not use a heuristic):
 BLIND_ALGORITHMS = {
@@ -14,13 +15,20 @@ BLIND_ALGORITHMS = {
 
 def main():
 
+    # The "-v" (or "--verbose") option can be given in any position:
+    verbose = "-v" in sys.argv or "--verbose" in sys.argv
+    args = [arg for arg in sys.argv[1:] if arg not in ("-v", "--verbose")]
+
     # We check the number of arguments:
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print("Usage: python main.py <map_file> <algorithm> [heuristic]")
+    if len(args) < 2 or len(args) > 3:
+        print("Usage: python main.py <map_file> <algorithm> [heuristic] [-v]")
         return
 
-    map_file = sys.argv[1]
-    algorithm = sys.argv[2].lower()
+    map_file = args[0]
+    algorithm = args[1].lower()
+
+    # In verbose mode, the search process is printed step by step:
+    log = print if verbose else None
 
     # We first read the map:
     try:
@@ -33,12 +41,12 @@ def main():
     if algorithm == "astar":
 
         # A* requires a heuristic:
-        if len(sys.argv) != 4:
+        if len(args) != 3:
             print("A* requires a heuristic")
             print("Available heuristics:",", ".join(HEURISTICS))
             return
 
-        heuristic_name = sys.argv[3].lower()
+        heuristic_name = args[2].lower()
 
         # In case the heuristic's name is not found:
         if heuristic_name not in HEURISTICS:
@@ -53,7 +61,8 @@ def main():
             terrain,
             init_state,
             goal_state,
-            heuristic
+            heuristic,
+            log
         )
 
     elif algorithm in BLIND_ALGORITHMS:
@@ -62,7 +71,8 @@ def main():
         found, path, explored_count, frontier_count = BLIND_ALGORITHMS[algorithm](
             terrain,
             init_state,
-            goal_state
+            goal_state,
+            log
         )
 
     else:
@@ -70,6 +80,10 @@ def main():
         print("Available algorithms: astar,", ", ".join(BLIND_ALGORITHMS))
         return
     
+    # The trace is separated from the final path:
+    if verbose:
+        print()
+
     # In case no solution has been found, the path to the last examined node is shown:
     if not found:
         print("No solution found. Path from the initial node to the last examined node:")
@@ -89,10 +103,7 @@ def main():
             label = ""
 
         # Blind search nodes are shown as "(d, g(n), op, S)" and A* nodes as "(d, g(n), op, h(n), S)":
-        if algorithm in BLIND_ALGORITHMS:
-            print(f"Node {depth}{label}: ({depth}, {node.g}, {node.action}, {node.state})")
-        else:
-            print(f"Node {depth}{label}: ({depth}, {node.g}, {node.action}, {node.h}, {node.state})")
+        print(f"Node {depth}{label}: {format_node(node, algorithm not in BLIND_ALGORITHMS)}")
 
     print()
     print(f"Total number of items in explored list: {explored_count}")

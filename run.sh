@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: ./run.sh <map_file> <bfs|dfs|astar> [heuristic]
+# Usage: ./run.sh <map_file> <bfs|dfs|astar> [heuristic] [-v]
 #        ./run.sh --experiments [seed]
 # Requires only Python 3 (no external dependencies).
 cd "$(dirname "$0")"
